@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 
-const API = 'http://localhost:3000/api/items';
+const API = `${process.env.REACT_APP_API_URL}/api/items`;
 
 const ItemList = () => {
   const [items, setItems] = useState([]);
@@ -9,8 +9,12 @@ const ItemList = () => {
   const [editId, setEditId] = useState(null);
 
   const fetchItems = async () => {
-    const res = await axios.get(API);
-    setItems(res.data);
+    try {
+      const res = await axios.get(API);
+      setItems(res.data);
+    } catch (err) {
+      console.error('Error fetching items:', err);
+    }
   };
 
   useEffect(() => {
@@ -18,7 +22,6 @@ const ItemList = () => {
   }, []);
 
   const handleSubmit = async (e) => {
-    console.log(form)
     e.preventDefault();
     try {
       if (editId) {
@@ -26,21 +29,29 @@ const ItemList = () => {
       } else {
         await axios.post(API, form);
       }
-      setForm({ item_name: '', estado: false });
+      setForm({ item_name: '', estado: false, cantidad: 1 });
       setEditId(null);
       fetchItems();
     } catch (err) {
-      console.error(err);
+      console.error('Error submitting form:', err);
     }
   };
 
   const handleDelete = async (id) => {
-    await axios.delete(`${API}/${id}`);
-    fetchItems();
+    try {
+      await axios.delete(`${API}/${id}`);
+      fetchItems();
+    } catch (err) {
+      console.error('Error deleting item:', err);
+    }
   };
 
   const handleEdit = (item) => {
-    setForm({ item_name: item.item_name, estado: item.estado });
+    setForm({
+      item_name: item.item_name,
+      estado: item.estado,
+      cantidad: item.cantidad || 1,
+    });
     setEditId(item._id);
   };
 
@@ -50,7 +61,7 @@ const ItemList = () => {
         <div className="card-body">
           <form onSubmit={handleSubmit}>
             <div className="row gy-3 gx-2 align-items-center">
-              <div className="col-12 col-md-6">
+              <div className="col-12 col-md-4">
                 <input
                   type="text"
                   className="form-control"
@@ -60,7 +71,7 @@ const ItemList = () => {
                   required
                 />
               </div>
-              <div className="col-12 col-md-3 d-flex align-items-center">
+              <div className="col-12 col-md-2 d-flex align-items-center">
                 <input
                   type="checkbox"
                   className="form-check-input me-2"
@@ -80,7 +91,6 @@ const ItemList = () => {
                   required
                 />
               </div>
-
               <div className="col-12 col-md-3">
                 <button type="submit" className="btn btn-primary w-100">
                   {editId ? 'Actualizar' : 'Agregar'}
@@ -96,7 +106,6 @@ const ItemList = () => {
           <thead className="table-dark text-center">
             <tr>
               <th>Nombre del Ítem</th>
-              {/* <th>Estado</th> */}
               <th>Cantidad</th>
               <th>Acciones</th>
             </tr>
@@ -105,13 +114,7 @@ const ItemList = () => {
             {items.map((item) => (
               <tr key={item._id}>
                 <td>{item.item_name}</td>
-                {/* <td className="text-center">
-                  <span className={`badge ${item.estado ? 'bg-success' : 'bg-secondary'}`}>
-                    {item.estado ? 'Activo' : 'Inactivo'}
-                  </span>
-                </td> */}
                 <td className="text-center">{item.cantidad}</td>
-
                 <td className="text-center">
                   <button
                     className="btn btn-sm btn-warning me-2"
