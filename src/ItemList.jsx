@@ -22,21 +22,32 @@ const ItemList = () => {
     fetchItems();
   }, []);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      if (editId) {
-        await axios.put(`${API}/${editId}`, form);
-      } else {
-        await axios.post(API, form);
-      }
-      setForm({ item_name: '', estado: false, cantidad: 1 });
-      setEditId(null);
-      fetchItems();
-    } catch (err) {
-      console.error('Error al guardar ítem:', err);
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  try {
+    if (editId) {
+      await axios.put(`${API}/${editId}`, form);
+    } else {
+      await axios.post(API, form);
+
+      // ✅ Mostrar el modal de agradecimiento
+      const thankYouModal = new window.bootstrap.Modal(document.getElementById('thankYouModal'));
+      thankYouModal.show();
+
+      // ⏱️ Ocultarlo luego de 3 segundos
+      setTimeout(() => {
+        thankYouModal.hide();
+      }, 5000);
     }
-  };
+
+    setForm({ item_name: '', estado: false, cantidad: 1 });
+    setEditId(null);
+    fetchItems();
+  } catch (err) {
+    console.error('Error al guardar ítem:', err);
+  }
+};
+
 
   const handleDeleteClick = (id) => {
     setSelectedItemId(id);
@@ -106,42 +117,56 @@ const ItemList = () => {
           </form>
         </div>
       </div>
-
-      {/* 🧾 TABLA DE ITEMS */}
-      <div className="table-responsive">
-        <table className="table table-bordered table-hover align-middle">
-          <thead className="table-dark text-center">
-            <tr>
-              <th>Nombre del basiquito</th>
-              <th>Cantidad</th>
-              <th>Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            {items.map((item) => (
-              <tr key={item._id}>
-                <td>{item.item_name}</td>
-                <td className="text-center">{item.cantidad}</td>
-                <td className="text-center">
-                  {/* <button
-                    className="btn btn-sm btn-warning me-2"
-                    onClick={() => handleEdit(item)}
-                  >
-                    Editar
-                  </button> */}
-                  <button
-                    className="btn btn-sm btn-danger"
-                    onClick={() => handleDeleteClick(item._id)}
-                  >
-                    Eliminar
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      {/* 🧾 LISTA DE ITEMS */}
+      <div className="card mb-4">
+        <div className="card-body">
+          <h4 className="text-center mb-4">
+            📋 Lista de Basiquitos a este momento
+          </h4>
+          <div className="table-responsive">
+            <table className="table table-bordered table-hover align-middle">
+              <thead className="table-dark text-center">
+                <tr>
+                  <th>Nombre del basiquito</th>
+                  <th>Cantidad</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                {items.map((item) => (
+                  <tr key={item._id}>
+                    <td>{item.item_name}</td>
+                    <td className="text-center">{item.cantidad}</td>
+                    <td className="text-center">
+                      <button
+                        className="btn btn-sm btn-danger"
+                        onClick={() => handleDeleteClick(item._id)}
+                      >
+                        Eliminar
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
 
+      {/* Modal de Agradecimiento */}
+      <div className="modal fade" id="thankYouModal" tabIndex="-1" aria-hidden="true">
+        <div className="modal-dialog modal-dialog-centered">
+          <div className="modal-content text-center">
+            <div className="modal-body p-5">
+              <h5 className="modal-title mb-3">¡Gracias! 💖</h5>
+              <p>
+                Muchas gracias por tu ayuda, significa mucho para esta etapa de mi vida.<br />
+                ¡Sos el mejor! 😊
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
       {/* 🧾 MODAL DE CONFIRMACIÓN */}
       <div
         className="modal fade"
