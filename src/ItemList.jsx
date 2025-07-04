@@ -161,7 +161,7 @@ const handleSubmit = async (e) => {
               <h5 className="modal-title mb-3">¡Gracias! 💖</h5>
               <p>
                 Muchas gracias por tu ayuda, significa mucho para esta etapa de mi vida.<br />
-                ¡Sos el mejor! 😊
+                ¡Sos la/el mejor! 😊
               </p>
             </div>
           </div>
