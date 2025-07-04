@@ -7,13 +7,14 @@ const ItemList = () => {
   const [items, setItems] = useState([]);
   const [form, setForm] = useState({ item_name: '', estado: false, cantidad: 1 });
   const [editId, setEditId] = useState(null);
+  const [selectedItemId, setSelectedItemId] = useState(null); // 🆕 Para confirmar borrado
 
   const fetchItems = async () => {
     try {
       const res = await axios.get(API);
       setItems(res.data);
-    } catch (err) {
-      console.error('Error fetching items:', err);
+    } catch (error) {
+      console.error('Error al obtener los ítems:', error);
     }
   };
 
@@ -33,45 +34,50 @@ const ItemList = () => {
       setEditId(null);
       fetchItems();
     } catch (err) {
-      console.error('Error submitting form:', err);
+      console.error('Error al guardar ítem:', err);
     }
   };
 
-  const handleDelete = async (id) => {
+  const handleDeleteClick = (id) => {
+    setSelectedItemId(id);
+    const modal = new window.bootstrap.Modal(document.getElementById('confirmModal'));
+    modal.show();
+  };
+
+  const confirmDelete = async () => {
     try {
-      await axios.delete(`${API}/${id}`);
+      await axios.delete(`${API}/${selectedItemId}`);
       fetchItems();
     } catch (err) {
-      console.error('Error deleting item:', err);
+      console.error('Error al eliminar ítem:', err);
+    } finally {
+      setSelectedItemId(null);
     }
   };
 
   const handleEdit = (item) => {
-    setForm({
-      item_name: item.item_name,
-      estado: item.estado,
-      cantidad: item.cantidad || 1,
-    });
+    setForm({ item_name: item.item_name, estado: item.estado, cantidad: item.cantidad });
     setEditId(item._id);
   };
 
   return (
-    <div className="container-fluid">
+    <>
+      {/* 🧾 FORMULARIO */}
       <div className="card mb-4">
         <div className="card-body">
           <form onSubmit={handleSubmit}>
             <div className="row gy-3 gx-2 align-items-center">
-              <div className="col-12 col-md-4">
+              <div className="col-md-6">
                 <input
                   type="text"
                   className="form-control"
-                  placeholder="Nombre del ítem"
+                  placeholder="Nombre del basiquito"
                   value={form.item_name}
                   onChange={(e) => setForm({ ...form, item_name: e.target.value })}
                   required
                 />
               </div>
-              <div className="col-12 col-md-2 d-flex align-items-center">
+              {/* <div className="col-md-3 d-flex align-items-center">
                 <input
                   type="checkbox"
                   className="form-check-input me-2"
@@ -79,8 +85,8 @@ const ItemList = () => {
                   onChange={(e) => setForm({ ...form, estado: e.target.checked })}
                 />
                 <label className="form-check-label">Activo</label>
-              </div>
-              <div className="col-12 col-md-3">
+              </div> */}
+              <div className="col-md-3">
                 <input
                   type="number"
                   className="form-control"
@@ -91,7 +97,7 @@ const ItemList = () => {
                   required
                 />
               </div>
-              <div className="col-12 col-md-3">
+              <div className="col-md-3">
                 <button type="submit" className="btn btn-primary w-100">
                   {editId ? 'Actualizar' : 'Agregar'}
                 </button>
@@ -101,11 +107,12 @@ const ItemList = () => {
         </div>
       </div>
 
+      {/* 🧾 TABLA DE ITEMS */}
       <div className="table-responsive">
         <table className="table table-bordered table-hover align-middle">
           <thead className="table-dark text-center">
             <tr>
-              <th>Nombre del Ítem</th>
+              <th>Nombre del basiquito</th>
               <th>Cantidad</th>
               <th>Acciones</th>
             </tr>
@@ -116,15 +123,15 @@ const ItemList = () => {
                 <td>{item.item_name}</td>
                 <td className="text-center">{item.cantidad}</td>
                 <td className="text-center">
-                  <button
+                  {/* <button
                     className="btn btn-sm btn-warning me-2"
                     onClick={() => handleEdit(item)}
                   >
                     Editar
-                  </button>
+                  </button> */}
                   <button
                     className="btn btn-sm btn-danger"
-                    onClick={() => handleDelete(item._id)}
+                    onClick={() => handleDeleteClick(item._id)}
                   >
                     Eliminar
                   </button>
@@ -134,7 +141,32 @@ const ItemList = () => {
           </tbody>
         </table>
       </div>
-    </div>
+
+      {/* 🧾 MODAL DE CONFIRMACIÓN */}
+      <div
+        className="modal fade"
+        id="confirmModal"
+        tabIndex="-1"
+        aria-labelledby="confirmModalLabel"
+        aria-hidden="true"
+      >
+        <div className="modal-dialog modal-dialog-centered">
+          <div className="modal-content">
+            <div className="modal-header">
+              <h5 className="modal-title" id="confirmModalLabel">¿Eliminar basiquito?</h5>
+              <button type="button" className="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div className="modal-body">
+              Esta acción no se puede deshacer. ¿Estás seguro que deseas eliminar este basiquito?
+            </div>
+            <div className="modal-footer">
+              <button type="button" className="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+              <button type="button" className="btn btn-danger" data-bs-dismiss="modal" onClick={confirmDelete}>Eliminar</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </>
   );
 };
 
